@@ -60,20 +60,10 @@ public class Product {
     @Min(value = 1000, message = "价格必须大于1000")
     private Integer price; // 价格
 
-    @Column(nullable = false)
-    @Schema(description = "库存数量", example = "10", required = true)
-    @Min(value = 0, message = "库存不能为负数")
-    private Integer stock; // 库存
 
-
-    @Schema(description = "商品状态（上架/下架）", example = "true")
-    private boolean onShelf = true;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt; // 系统生成创建时间
 
-
-    @Version // 乐观锁字段，用于处理高并发库存更新
-    private Long version;
 }

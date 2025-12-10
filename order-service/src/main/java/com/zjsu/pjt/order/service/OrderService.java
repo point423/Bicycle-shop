@@ -12,6 +12,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 import java.net.URI;
 import java.util.Map;
@@ -26,9 +29,10 @@ public class OrderService {
     @Autowired
     private RestTemplate restTemplate;
 
-    // 从 application.properties 中读取 product-service 的地址
-    @Value("${product.service.url}")
-    private String productServiceUrl;
+
+
+    @Value("${inventory.service.url}")
+    private String inventoryServiceUrl;
 
     @Value("${user.service.url}")
     private String userServiceUrl;
@@ -41,23 +45,16 @@ public class OrderService {
      */
     @Transactional
     public Order createOrder(UUID buyerId, UUID productId, int quantity) {
-        // 1.调用 User-Service 验证用户是否存在
+        // 1. 调用 User-Service 验证用户是否存在
         if (!isUserExists(buyerId)) {
             throw new ResourceNotFoundException("创建订单失败：购买者用户不存在，ID: " + buyerId);
         }
 
-
-        // 2.获取商品信息并校验库存
-        Map<String, Object> productInfo = getProductInfo(productId);
-        int stock = (Integer) productInfo.get("stock");
-        if (stock < quantity) {
-            // 这里可以抛出更具体的业务异常
-            throw new IllegalStateException("库存不足，当前库存: " + stock + "，需要: " + quantity);
-        }
-        // 3. 调用 Product-Service 扣减库存
+        // 2. 直接调用 Inventory-Service 扣减库存
+        // inventory-service 内部会处理库存不足的情况
         deductStock(productId, quantity);
 
-        // 4. 如果库存扣减成功，创建并保存订单
+        // 3. 如果库存扣减成功，创建并保存订单
         Order order = new Order();
         order.setBuyerId(buyerId);
         order.setProductId(productId);
@@ -76,12 +73,11 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("订单不存在，ID: " + orderId));
 
-        // 检查订单是否已经是取消状态
         if ("CANCELLED".equalsIgnoreCase(order.getStatus())) {
             throw new IllegalStateException("订单已取消，请勿重复操作");
         }
 
-        // 1. 调用 Product-Service 回滚（增加）库存
+        // 1. 调用 Inventory-Service 回滚（增加）库存
         increaseStock(order.getProductId(), order.getQuantity());
 
         // 2. 更新订单状态为 "CANCELLED"
@@ -89,7 +85,7 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    // --- 私有辅助方法，用于和 Product-Service 通信 ---
+    // --- 私有辅助方法，用于和 Inventory-Service 通信 ---
 
 
     /**
@@ -99,7 +95,7 @@ public class OrderService {
      */
     private boolean isUserExists(UUID userId) {
         // 假设 user-service 提供了一个 GET /api/users/{id} 的接口
-        java.net.URI uri = UriComponentsBuilder
+       URI uri = UriComponentsBuilder
                 .fromHttpUrl(userServiceUrl)
                 .path("/api/users/{id}")
                 .buildAndExpand(userId) // 使用 buildAndExpand 替换路径变量
@@ -122,61 +118,63 @@ public class OrderService {
     }
 
 
-    /**
-     * 【新增】调用 product-service 获取商品完整信息
-     */
-    private Map<String, Object> getProductInfo(UUID productId) {
-        URI uri = UriComponentsBuilder.fromHttpUrl(productServiceUrl).path("/api/products/{id}").buildAndExpand(productId).toUri();
-        try {
-            // 假设product-service的GET /api/products/{id}返回一个包含stock和price的JSON
-            ResponseEntity<Map> response = restTemplate.getForEntity(uri, Map.class);
-            if (response.getBody() == null) {
-                throw new ResourceNotFoundException("从商品服务获取信息为空，ID: " + productId);
-            }
-            return response.getBody();
-        } catch (HttpClientErrorException.NotFound e) {
-            throw new ResourceNotFoundException("商品不存在，ID: " + productId);
-        }
-    }
-
-
 
     /**
-     * 调用 product-service 扣减库存的内部接口
+     * 调用 inventory-service 扣减库存
      */
     private void deductStock(UUID productId, int quantity) {
-        URI uri = UriComponentsBuilder
-                .fromHttpUrl(productServiceUrl)
-                .path("/api/products/internal/deduct-stock")
-                .queryParam("productId", productId)
-                .queryParam("quantity", quantity)
-                .build().toUri();
+        // 构造指向 inventory-service 的URL
+        String url = inventoryServiceUrl + "/api/inventory/decrease";
+
+        // 准备请求头
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // 准备请求体 (Map 或 DTO)
+        Map<String,Object> requestBody = Map.of(
+                "productId", productId.toString(),
+                "quantity", quantity
+        );
+
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+
         try {
             // 发起POST请求
-            restTemplate.postForEntity(uri, null, Void.class);
+            restTemplate.postForEntity(url, requestEntity, Void.class);
         } catch (HttpClientErrorException e) {
-            // 如果product-service返回错误（如库存不足），则抛出异常，事务将回滚
-            throw new RuntimeException("创建订单失败：扣减库存失败 - " + e.getResponseBodyAsString());
+            // 如果 inventory-service 返回4xx错误（如400 Bad Request代表库存不足），则抛出异常
+            throw new IllegalStateException("创建订单失败：库存不足或商品不存在 - " + e.getResponseBodyAsString());
+        } catch (Exception e) {
+            // 处理其他网络或服务器错误
+            throw new RuntimeException("调用库存服务失败: " + e.getMessage());
         }
     }
 
+
     /**
-     * 调用 product-service 增加库存的内部接口
+     * 调用 inventory-service 增加库存
      */
     private void increaseStock(UUID productId, int quantity) {
-        URI uri = UriComponentsBuilder
-                .fromHttpUrl(productServiceUrl)
-                .path("/api/products/internal/increase-stock")
-                .queryParam("productId", productId)
-                .queryParam("quantity", quantity)
-                .build().toUri();
+        // 构造指向 inventory-service 的URL
+        String url = inventoryServiceUrl + "/api/inventory/increase";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> requestBody = Map.of(
+                "productId", productId.toString(),
+                "quantity", quantity
+        );
+
+       HttpEntity<java.util.Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+
         try {
             // 发起POST请求
-            restTemplate.postForEntity(uri, null, Void.class);
-        } catch (HttpClientErrorException e) {
-            // 如果回滚库存失败，也应抛出异常，让调用方知道。
-            // 在实际生产中，这里可能需要加入重试或记录日志的机制。
-            throw new RuntimeException("取消订单警告：回滚库存失败 - " + e.getResponseBodyAsString());
+            restTemplate.postForEntity(url, requestEntity, Void.class);
+        } catch (Exception e) {
+            // 如果回滚库存失败，也应抛出异常并记录日志。
+            // 在实际生产中，这里可能需要加入重试或记录到失败任务表，由定时任务补偿。
+            throw new RuntimeException("取消订单警告：回滚库存失败 - " + e.getMessage());
         }
     }
 }

@@ -13,9 +13,11 @@ import java.util.List;
 import jakarta.validation.Valid;
 import java.util.UUID;
 
+
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
+
 
     @Autowired
     private ProductRepository productRepository;
@@ -24,17 +26,16 @@ public class ProductController {
 
     // --- 对外展示接口 ---
 
+
     @GetMapping
     @Operation(summary = "获取所有上架商品")
     public List<Product> getOnShelfProducts() {
-        return productRepository.findByOnShelfTrue();
-    }
+        return productService.findOnShelfProducts();    }
 
     @GetMapping("/category/{category}")
     @Operation(summary = "按分类展示上架商品")
     public List<Product> getProductsByCategory(@PathVariable String category) {
-        return productRepository.findByCategoryAndOnShelfTrue(category);
-    }
+        return productService.findOnShelfProductsByCategory(category);    }
 
     @GetMapping("/{id}")
     @Operation(summary = "获取单个商品详情")
@@ -44,53 +45,30 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-
-
     // --- 新增、修改、删除接口 ---
 
     @PostMapping
     @Operation(summary = "新增商品")
-    @ResponseStatus(HttpStatus.CREATED) // 返回 201 Created 状态码
+    @ResponseStatus(HttpStatus.CREATED)
     public Product createProduct(@Valid @RequestBody Product product) {
-        // @Valid 注解会触发实体类中的验证规则
         return productService.createProduct(product);
-
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "修改商品信息")
     public ResponseEntity<Product> updateProduct(@PathVariable UUID id, @Valid @RequestBody Product productDetails) {
-            Product updatedProduct = productService.updateProduct(id, productDetails);
-            return ResponseEntity.ok(updatedProduct);
-        }
-
+        Product updatedProduct = productService.updateProduct(id, productDetails);
+        return ResponseEntity.ok(updatedProduct);
+    }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除商品")
-    public ResponseEntity<Void> deleteProduct(@PathVariable UUID id) {
+    public ResponseEntity<java.lang.Void> deleteProduct(@PathVariable UUID id) {
         boolean deleted = productService.deleteProduct(id);
-        return ResponseEntity.noContent().build(); // 返回 204 No Content 表示成功删除
-
+        if (deleted) {
+            return ResponseEntity.noContent().build(); // 204 No Content
+        } else {
+            return ResponseEntity.notFound().build(); // 404 Not Found
+        }
     }
-
-
-    // --- 内部服务调用接口 (供Order-Service调用) ---
-
-    @PostMapping("/internal/deduct-stock")
-    @Operation(summary = "扣减库存（内部接口）")
-    public ResponseEntity<Void> deductStock(@RequestParam UUID productId, @RequestParam int quantity) {
-            productService.deductStock(productId, quantity);
-            return ResponseEntity.ok().build();
-
-    }
-
-    @PostMapping("/internal/increase-stock")
-    @Operation(summary = "增加库存（内部接口）")
-    public ResponseEntity<Void> increaseStock(@RequestParam UUID productId, @RequestParam int quantity) {
-            productService.increaseStock(productId, quantity);
-            return ResponseEntity.ok().build();
-
-    }
-
-
 }

@@ -56,7 +56,7 @@ public class OrderController {
     @Operation(summary = "按多种条件查询订单")
     public List<Order> searchOrders(
             @Parameter(description = "购买者ID") @RequestParam(required = false) UUID buyerId,
-            @Parameter(description = "订单状态 (例如: active, CANCELLED)") @RequestParam(required = false) java.lang.String status,
+            @Parameter(description = "订单状态 (例如: active, CANCELLED)") @RequestParam(required = false) String status,
             @Parameter(description = "查询开始时间 (格式: yyyy-MM-dd'T'HH:mm:ss)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @Parameter(description = "查询结束时间 (格式: yyyy-MM-dd'T'HH:mm:ss)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
     ) {

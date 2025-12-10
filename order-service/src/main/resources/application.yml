@@ -13,12 +13,14 @@ spring:
       ddl-auto: update
     show-sql: true
 
-# 课程服务地址（Docker环境）
-product-service:
-  url: ${PRODUCT_SERVICE_URL:http://product-service:8082}
+# 服务地址（Docker环境）
+
 
 user-service:
   url: ${USER_SERVICE_URL:http://user-service:8081}
+
+inventory-service:
+  url: ${INVENTORY_SERVICE_URL:http://inventory-service:8084}
 
 logging:
   level:

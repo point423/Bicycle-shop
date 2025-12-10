@@ -14,14 +14,8 @@ import java.util.UUID;
  */
 @Repository
 public interface ProductRepository extends JpaRepository<Product, UUID> {
-    // 按品牌查询所有已上架的商品
-    List<Product> findByBrandAndOnShelfTrue(String brand);
-
-    // 按分类查询所有已上架的商品
-    List<Product> findByCategoryAndOnShelfTrue(String category);
-
-    // 查询所有已上架的商品
-    List<Product> findByOnShelfTrue();
+    // 根据ID列表和分类进行查询
+    List<Product> findByIdInAndCategory(List<UUID> ids, String category);
 
 
 
