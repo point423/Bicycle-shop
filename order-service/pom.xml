@@ -58,11 +58,11 @@
 <!--            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>-->
 <!--        </dependency>-->
 
-<!--        &lt;!&ndash; Spring Cloud Load Balancer (服务发现必需) &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.cloud</groupId>-->
-<!--            <artifactId>spring-cloud-starter-loadbalancer</artifactId>-->
-<!--        </dependency>-->
+        <!-- Spring Cloud Load Balancer (服务发现必需) -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
         <!-- 核心Web依赖 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -119,11 +119,11 @@
 
 
 
-<!--        &lt;!&ndash; Nacos Service Discovery Starter &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba.cloud</groupId>-->
-<!--            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>-->
-<!--        </dependency>-->
+        <!-- Nacos Service Discovery Starter -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
 
         <!-- Spring Boot Actuator (用于健康检查) -->
         <dependency>

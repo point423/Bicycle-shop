@@ -14,6 +14,9 @@ import java.util.stream.Collectors;
 import com.zjsu.pjt.inventory.repository.InventoryRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/inventory")
@@ -22,6 +25,8 @@ public class InventoryController {
 
     private final InventoryService inventoryService;
 
+    @Autowired
+    private Environment environment;
 
     @Autowired
     private InventoryRepository inventoryRepository;
@@ -29,19 +34,40 @@ public class InventoryController {
     // 获取所有已上架商品的ID列表
     @GetMapping("/on-shelf-product-ids")
     @Operation(summary = "获取所有已上架商品的Product ID列表")
-    public List<UUID> getOnShelfProductIds() {
-        return inventoryRepository.findByOnShelfTrue().stream()
-                .map(Inventory::getProductId) // 从Inventory对象中提取productId字符串
+    public ResponseEntity<Map<String, Object>> getOnShelfProductIds() { // 1. 修改返回类型为 ResponseEntity<Map<...>>
+        // 2. 获取真实的 ID 列表
+        List<UUID> idList = inventoryRepository.findByOnShelfTrue().stream()
+                .map(Inventory::getProductId)
                 .collect(Collectors.toList());
+
+        // 3. 获取当前服务的端口号
+        String port = environment.getProperty("local.server.port");
+
+        // 4. 构建包含 data 和 port 的响应体
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("data", idList); // 将 ID 列表放入 "data" 字段
+        responseBody.put("port", "inventory-service instance on port: " + port); // 将端口信息放入 "port" 字段
+
+        // 5. 返回包装后的 Map
+        return ResponseEntity.ok(responseBody);
     }
 
     // 用于更新上架状态的内部接口
     @PutMapping("/{productId}/on-shelf")
-    public ResponseEntity<Void> updateOnShelfStatus(
-            @PathVariable UUID productId,
-            @RequestParam boolean onShelf) {
+    public ResponseEntity<Map<String, Object>> updateOnShelfStatus( // 1. 修改返回类型
+                                                                    @PathVariable UUID productId,
+                                                                    @RequestParam boolean onShelf) {
+        // 2. 执行业务逻辑
         inventoryService.updateOnShelfStatus(productId, onShelf);
-        return ResponseEntity.ok().build();
+
+        // 3. 获取端口号并构建响应体
+        String port = environment.getProperty("local.server.port");
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("message", "Status updated successfully");
+        responseBody.put("port", "inventory-service instance on port: " + port);
+
+        // 4. 返回包含端口信息的 200 OK 响应
+        return ResponseEntity.ok(responseBody);
     }
 
     //创建库存实例
@@ -87,20 +113,35 @@ public class InventoryController {
 
     // 扣减库存的接口
     @PostMapping("/decrease")
-    public ResponseEntity<Void> decreaseStock(@RequestBody InventoryUpdateRequest request) {
+    public ResponseEntity<Map<String, Object>> decreaseStock(@RequestBody InventoryUpdateRequest request) { // 1. 修改返回类型
         try {
             inventoryService.decreaseStock(request.getProductId(), request.getQuantity());
-            return ResponseEntity.ok().build();
+
+            // 2. 构建成功响应
+            String port = environment.getProperty("local.server.port");
+            Map<String, Object> responseBody = new HashMap<>();
+            responseBody.put("message", "Stock decreased successfully.");
+            responseBody.put("port", "inventory-service instance on port: " + port);
+
+            return ResponseEntity.ok(responseBody);
+
         } catch (Exception e) {
-            // 返回400 Bad Request表示客户端请求有问题（比如库存不足）
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            // 保持原有的错误处理逻辑
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
         }
     }
 
     // 增加库存的接口
     @PostMapping("/increase")
-    public ResponseEntity<Void> increaseStock(@RequestBody InventoryUpdateRequest request) {
+    public ResponseEntity<Map<String, Object>> increaseStock(@RequestBody InventoryUpdateRequest request) { // 1. 修改返回类型
         inventoryService.increaseStock(request.getProductId(), request.getQuantity());
-        return ResponseEntity.ok().build();
+
+        // 2. 构建成功响应
+        String port = environment.getProperty("local.server.port");
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("message", "Stock increased successfully.");
+        responseBody.put("port", "inventory-service instance on port: " + port);
+
+        return ResponseEntity.ok(responseBody);
     }
 }

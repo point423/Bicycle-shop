@@ -7,6 +7,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.core.env.Environment;
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +24,9 @@ import java.util.UUID;
 @Tag(name = "用户管理模块", description = "提供用户管理的创建、查询、更新、删除操作")
 public class UserController {
     private final UserService UserService;
+
+    @Autowired
+    private Environment environment;
 
     // 新增用户
     @PostMapping
@@ -37,9 +44,23 @@ public class UserController {
 
     // 按ID查询用户
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable UUID id) {
-        return ResponseEntity.ok(UserService.getUserById(id));
+    public ResponseEntity<Map<String, Object>> getUserById(@PathVariable UUID id) {
+        // 1. 获取用户数据
+        User user = UserService.getUserById(id);
+
+        // 2. 获取端口号
+        String port = environment.getProperty("local.server.port");
+
+        // 3. 构建响应体
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("data", user); // 将用户对象放入 "data" 字段
+        responseBody.put("port", "user-service instance on port: " + port);
+
+        // 4. 返回包装后的 Map
+        return ResponseEntity.ok(responseBody);
     }
+
+
 
 
     // 按用户id查询用户

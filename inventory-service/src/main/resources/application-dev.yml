@@ -1,5 +1,5 @@
 server:
-  port: 8084
+  port: ${SERVER_PORT:8084}
 
 spring:
   application:
@@ -15,6 +15,31 @@ spring:
       ddl-auto: update
     show-sql: false
 
+  cloud:
+    nacos:
+      discovery:
+        server-addr: nacos:8848
+        #        namespace: dev
+        #        group: COURSEHUB_GROUP
+        ephemeral: true
+        heart-beat-interval: 5000
+        heart-beat-timeout: 15000
+        username: nacos # 默认用户名
+        password: nacos # 默认密码
+        access-token: VGhpc0lzTXlTdXBlckxvbmdBbmRBYnNvbHV0ZWx5U2VjdXJlU2VjcmV0S2V5Rm9yTmFjb3NBdXRoMTIzNDU=
+
+
 logging:
   level:
     com.zjsu.inventory: WARN
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+

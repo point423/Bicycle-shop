@@ -113,11 +113,11 @@
 
 
 
-<!--        &lt;!&ndash; Nacos Service Discovery Starter &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba.cloud</groupId>-->
-<!--            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>-->
-<!--        </dependency>-->
+        <!-- Nacos Service Discovery Starter -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
 
         <!-- Spring Boot Actuator (用于健康检查) -->
         <dependency>
