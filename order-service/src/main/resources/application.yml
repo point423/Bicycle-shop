@@ -23,6 +23,39 @@ spring:
         heart-beat-interval: 5000
         heart-beat-timeout: 15000
 
+  # Feign 和 Resilience4j 配置
+  feign:
+    circuitbreaker:
+      enabled: true # 为Feign启用熔断器
+    client:
+      config:
+        default: # 全局默认配置
+          connectTimeout: 3000 # 3秒连接超时
+          readTimeout: 5000    # 5秒读取超时
+
+  resilience4j:
+    circuitbreaker:
+      instances:
+        user-service: # 与@FeignClient的name属性匹配
+          failure-rate-threshold: 50 # 失败率阈值50%
+          sliding-window-type: COUNT_BASED
+          sliding-window-size: 10 # 最近10次请求的滑动窗口
+          minimum-number-of-calls: 5 # 至少5次请求后才开始计算失败率
+          wait-duration-in-open-state: 10s # 熔断器开启后，等待10秒进入半开状态
+        catalog-service: # 与@FeignClient的name属性匹配
+          failure-rate-threshold: 50
+          sliding-window-type: COUNT_BASED
+          sliding-window-size: 10
+          minimum-number-of-calls: 5
+          wait-duration-in-open-state: 10s
+    timelimiter: # 可选：配置超时熔断
+      instances:
+        user-service:
+          timeout-duration: 4s
+        catalog-service:
+          timeout-duration: 4s
+
+
 logging:
   level:
     com.zjsu.order: INFO

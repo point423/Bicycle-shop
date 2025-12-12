@@ -46,7 +46,7 @@ public class InventoryController {
         // 4. 构建包含 data 和 port 的响应体
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("data", idList); // 将 ID 列表放入 "data" 字段
-        responseBody.put("port", "inventory-service instance on port: " + port); // 将端口信息放入 "port" 字段
+        responseBody.put("port", port); // 将端口信息放入 "port" 字段
 
         // 5. 返回包装后的 Map
         return ResponseEntity.ok(responseBody);
@@ -64,7 +64,7 @@ public class InventoryController {
         String port = environment.getProperty("local.server.port");
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("message", "Status updated successfully");
-        responseBody.put("port", "inventory-service instance on port: " + port);
+        responseBody.put("port",port);
 
         // 4. 返回包含端口信息的 200 OK 响应
         return ResponseEntity.ok(responseBody);
@@ -121,7 +121,7 @@ public class InventoryController {
             String port = environment.getProperty("local.server.port");
             Map<String, Object> responseBody = new HashMap<>();
             responseBody.put("message", "Stock decreased successfully.");
-            responseBody.put("port", "inventory-service instance on port: " + port);
+            responseBody.put("port",port);
 
             return ResponseEntity.ok(responseBody);
 
@@ -140,7 +140,7 @@ public class InventoryController {
         String port = environment.getProperty("local.server.port");
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("message", "Stock increased successfully.");
-        responseBody.put("port", "inventory-service instance on port: " + port);
+        responseBody.put("port",port);
 
         return ResponseEntity.ok(responseBody);
     }

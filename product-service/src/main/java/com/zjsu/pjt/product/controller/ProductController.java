@@ -63,12 +63,15 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除商品")
-    public ResponseEntity<java.lang.Void> deleteProduct(@PathVariable UUID id) {
-        boolean deleted = productService.deleteProduct(id);
-        if (deleted) {
-            return ResponseEntity.noContent().build(); // 204 No Content
-        } else {
-            return ResponseEntity.notFound().build(); // 404 Not Found
-        }
+    public ResponseEntity<Void> deleteProduct(@PathVariable UUID id) {
+        // 直接调用 service 方法。
+        // 如果找不到商品，service 会抛出 ResourceNotFoundException，
+        // 全局异常处理器会将其转换为 404 响应。
+        // 如果调用库存服务失败，会抛出 BusinessException，转换为 500 响应。
+        // 如果方法正常结束，说明删除成功。
+        productService.deleteProduct(id);
+
+        // 方法能执行到这里，就直接返回 204 No Content
+        return ResponseEntity.noContent().build();
     }
 }

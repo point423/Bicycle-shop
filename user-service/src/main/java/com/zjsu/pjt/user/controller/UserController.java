@@ -53,8 +53,8 @@ public class UserController {
 
         // 3. 构建响应体
         Map<String, Object> responseBody = new HashMap<>();
-        responseBody.put("data", user); // 将用户对象放入 "data" 字段
-        responseBody.put("port", "user-service instance on port: " + port);
+        responseBody.put("user", user); // 将用户对象放入 "user" 字段
+        responseBody.put("port",port);
 
         // 4. 返回包装后的 Map
         return ResponseEntity.ok(responseBody);

@@ -7,12 +7,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 /**
  * 项目启动类
  */
 @SpringBootApplication
 @EnableDiscoveryClient
+@EnableFeignClients
 public class OrderServiceApplication {
     @Bean
     @LoadBalanced // <--- 【魔法就在这里！】这个注解赋予了RestTemplate负载均衡的能力

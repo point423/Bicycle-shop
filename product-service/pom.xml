@@ -64,6 +64,18 @@
 <!--        </dependency>-->
 
 
+        <!-- OpenFeign (用于声明式的REST客户端) -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
+        <!-- Resilience4j 熔断器 (与OpenFeign集成) -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+        </dependency>
+
         <!-- 核心Web依赖 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

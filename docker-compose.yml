@@ -186,9 +186,9 @@ services:
       DB_URL: jdbc:mysql://inventory-db:3306/inventory_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       DB_USERNAME: inventory_user
       DB_PASSWORD: inventory_pass
-      SERVER_PORT: 8085
+      SERVER_PORT: 8030
     ports:
-      - "8085:8085"
+      - "8085:8030"
     depends_on:
       inventory-db:
         condition: service_healthy
@@ -232,9 +232,9 @@ services:
       DB_URL: jdbc:mysql://user-db:3306/user_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       DB_USERNAME: user_user
       DB_PASSWORD: user_pass
-      SERVER_PORT: 8086
+      SERVER_PORT: 8020
     ports:
-      - "8086:8086"
+      - "8086:8020"
     depends_on:
       user-db:
         condition: service_healthy
