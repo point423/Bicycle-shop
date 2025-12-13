@@ -10,15 +10,15 @@ import java.util.UUID;
 @FeignClient(name = "inventory-service", fallback = InventoryClientFallback.class)
 public interface InventoryClient {
 
-    @PostMapping("/api/inventory/create")
+    @PostMapping("/api/inventorys/create")
     ResponseEntity<Map<String, Object>> createInventoryRecord(@RequestBody InventoryCreateRequest request);
 
-    @DeleteMapping("/api/inventory/{productId}")
+    @DeleteMapping("/api/inventorys/{productId}")
     void deleteInventoryRecord(@PathVariable("productId") UUID productId);
 
-    @PutMapping("/api/inventory/{productId}/on-shelf")
+    @PutMapping("/api/inventorys/{productId}/on-shelf")
     ResponseEntity<Map<String, Object>> updateOnShelfStatus(@PathVariable("productId") UUID productId, @RequestParam("onShelf") boolean onShelf);
 
-    @GetMapping("/api/inventory/on-shelf-product-ids")
+    @GetMapping("/api/inventorys/on-shelf-product-ids")
     ResponseEntity<Map<String, Object>> getOnShelfProductIds();
 }

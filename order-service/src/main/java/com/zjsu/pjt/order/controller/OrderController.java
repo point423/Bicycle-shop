@@ -16,7 +16,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Data
 @RestController
 @RequestMapping("/api/orders")
@@ -31,7 +33,10 @@ public class OrderController {
     @PostMapping
     @Operation(summary = "创建新订单")
     @ResponseStatus(HttpStatus.CREATED)
-    public Order createOrder(@Valid @RequestBody CreateOrderRequest request) {
+    public Order createOrder(@RequestHeader("X-User-Id") String userId,
+                             @RequestHeader("X-Username") String username,
+                             @Valid @RequestBody CreateOrderRequest request) {
+        log.info("用户 {} (ID: {}) 发起选课请求", username, userId);
         System.out.println("====== Received request body: " + request.toString() + " ======");
         return orderService.createOrder(request.getBuyerId(), request.getProductId(), request.getQuantity());
     }

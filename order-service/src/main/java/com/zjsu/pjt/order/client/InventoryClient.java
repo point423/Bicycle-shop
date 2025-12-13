@@ -23,7 +23,7 @@ public interface InventoryClient {
      * @param request 包含商品ID和扣减数量的请求体
      * @return 返回一个包含操作结果和端口信息的Map
      */
-    @PostMapping("/api/inventory/decrease")
+    @PostMapping("/api/inventorys/decrease")
     ResponseEntity<Map<String, Object>> decreaseStock(@RequestBody InventoryUpdateRequest request);
 
 
@@ -32,7 +32,7 @@ public interface InventoryClient {
      * @param request 包含商品ID和增加数量的请求体
      * @return 包含操作结果的响应实体
      */
-    @PostMapping("/api/inventory/increase")
-    ResponseEntity<java.util.Map<String, Object>> increaseStock(@RequestBody InventoryUpdateRequest request);
+    @PostMapping("/api/inventorys/increase")
+    ResponseEntity<Map<String, Object>> increaseStock(@RequestBody InventoryUpdateRequest request);
 
 }

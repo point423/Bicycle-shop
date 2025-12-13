@@ -41,3 +41,7 @@ management:
     health:
       show-details: always
 
+
+jwt:
+  secret: ${JWT_SECRET:ThisIsMySuperLongAndExtremelySecureSecretKeyForHS512AlgorithmAtLeast64Chars}
+  expiration: ${JWT_EXPIRATION:86400000}

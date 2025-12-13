@@ -44,6 +44,16 @@ public class User {
     @NotNull(message = "年龄不能为空")
     private Integer age;
 
+    /**
+     * 角色字段
+     * 使用 @Enumerated(EnumType.STRING) 将枚举名(USER, ADMIN)存入数据库
+     * 默认为普通用户 (USER)
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER; // 设置默认值为普通用户
+
+
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

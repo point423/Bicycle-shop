@@ -205,6 +205,8 @@ services:
       dockerfile: Dockerfile
     container_name: user-service-1
     environment:
+      JWT_SECRET: "ThisIsMySuperLongAndExtremelySecureSecretKeyForHS512AlgorithmAtLeast64Chars"
+      JWT_EXPIRATION: 86400000
       SPRING_PROFILES_ACTIVE: dev
       DB_URL: jdbc:mysql://user-db:3306/user_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       DB_USERNAME: user_user
@@ -228,6 +230,8 @@ services:
       dockerfile: Dockerfile
     container_name: user-service-2
     environment:
+      JWT_SECRET: "ThisIsMySuperLongAndExtremelySecureSecretKeyForHS512AlgorithmAtLeast64Chars"
+      JWT_EXPIRATION: 86400000
       SPRING_PROFILES_ACTIVE: dev
       DB_URL: jdbc:mysql://user-db:3306/user_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       DB_USERNAME: user_user
@@ -243,6 +247,37 @@ services:
     networks:
       - bicycle-network
     restart: unless-stopped
+
+
+  # API 网关
+  gateway-service:
+    build:
+      context: ./gateway-service
+      dockerfile: Dockerfile
+    container_name: gateway-service
+    ports:
+      - "8090:8090" # 暴露网关端口
+    environment:
+      # 网关也需要知道Nacos在哪里
+      JWT_SECRET: "ThisIsMySuperLongAndExtremelySecureSecretKeyForHS512AlgorithmAtLeast64Chars"
+      JWT_EXPIRATION: 86400000
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+    depends_on:
+      nacos:
+        condition: service_healthy
+      user-service-1:
+        condition: service_started
+      product-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      inventory-service-1:
+        condition: service_started
+    networks:
+      - bicycle-network
+    restart: unless-stopped
+
 
   # 订单服务
   order-service:

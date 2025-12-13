@@ -1,0 +1,93 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: nacos:8848 # 指向Nacos容器
+        # 关键修正：添加和其他服务一样的认证信息
+        ephemeral: true
+        heart-beat-interval: 5000
+        heart-beat-timeout: 15000
+        username: nacos # 默认用户名
+        password: nacos # 默认密码
+        access-token: VGhpc0lzTXlTdXBlckxvbmdBbmRBYnNvbHV0ZWx5U2VjdXJlU2VjcmV0S2V5Rm9yTmFjb3NBdXRoMTIzNDU=
+
+    gateway:
+      # 路由规则配置
+      routes:
+        # 用户服务路由
+        - id: user-service-route
+          uri: lb://user-service # lb://表示从Nacos负载均衡到user-service
+          predicates:
+            - Path=/api/auth/**, /api/users/**
+          # 过滤器：如果后端服务的路径不带/api/users，就需要去掉前缀
+          # 根据你的项目结构，user-service的路径是 /api/students，所以我们需要去掉 /api
+          # 但 /api/auth 也在user-service, 所以统一去掉 /api
+
+
+        # 商品服务路由
+        - id: product-public-route
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+
+
+
+        # 商品服务路由，管理员
+        - id: product-admin-route
+          uri: lb://product-service
+          predicates:
+            - Path=/api/admin/products/**
+
+
+        # 订单服务路由
+        - id: order-service-route
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+
+
+
+        # 库存服务路由
+        - id: inventory-service-route
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventorys/**
+
+
+
+      # 全局跨域配置
+      globalcors:
+        cors-configurations:
+          '[/**]': # 匹配所有请求
+            allowedOrigins: "*" # 允许所有来源
+            allowedMethods: "*" # 允许所有HTTP方法
+            allowedHeaders: "*" # 允许所有请求头
+
+# JWT 配置
+jwt:
+  secret: ${JWT_SECRET:ThisIsMySuperLongAndExtremelySecureSecretKeyForHS512AlgorithmAtLeast64Chars}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+logging:
+  level:
+    # 1. 将整个项目的默认日志级别设置为 DEBUG
+    #    这样可以看到更多 Spring Boot 框架自身的日志
+    root: INFO
+    com.zjgsu.pjt.gateway: DEBUG # 将你自己的项目包路径设置为DEBUG
+
+    # 2. 专门针对 Spring Cloud Gateway 的核心组件设置日志级别
+    #    这是排查路由、过滤器、服务发现问题的关键！
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.http.server.reactive: DEBUG
+    org.springframework.web.reactive: DEBUG
+    reactor.netty.http.client: DEBUG # 查看底层HTTP客户端的日志
+
+    # 3. 专门针对 Nacos 客户端的日志
+    #    可以看到服务发现、注册、心跳等详细信息
+    com.alibaba.cloud.nacos: DEBUG
+    com.alibaba.nacos.client.naming: DEBUG
