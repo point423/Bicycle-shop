@@ -31,6 +31,14 @@ public class InventoryController {
     @Autowired
     private InventoryRepository inventoryRepository;
 
+
+    @PostMapping("/stocks") // 使用POST方法，因为GET请求通常不建议携带复杂的请求体
+    @Operation(summary = "根据商品ID列表批量获取库存")
+    public ResponseEntity<Map<UUID, Integer>> getStocksByProductIds(@RequestBody List<UUID> productIds) {
+        Map<UUID, Integer> stockMap = inventoryService.getStocksByProductIds(productIds);
+        return ResponseEntity.ok(stockMap);
+    }
+
     // 获取所有已上架商品的ID列表
     @GetMapping("/on-shelf-product-ids")
     @Operation(summary = "获取所有已上架商品的Product ID列表")
@@ -101,6 +109,14 @@ public class InventoryController {
     public ResponseEntity<Inventory> getInventoryByProductId(@PathVariable UUID productId) {
         Inventory inventory = inventoryService.getInventoryByProductId(productId);
         return ResponseEntity.ok(inventory);
+    }
+
+
+    @PutMapping("/admin/stock")
+    @Operation(summary = "管理员直接修改库存数量")
+    public ResponseEntity<Void> updateStockByAdmin(@RequestBody InventoryUpdateRequest request) {
+        inventoryService.updateStock(request.getProductId(), request.getQuantity());
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{productId}")

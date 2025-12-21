@@ -7,12 +7,22 @@ import com.zjsu.pjt.inventory.exception.ResourceNotFoundException;
 import com.zjsu.pjt.inventory.model.Inventory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Map; // 导入 Map
+import java.util.stream.Collectors;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
+
+
+    @Transactional(readOnly = true)
+    public Map<UUID, Integer> getStocksByProductIds(List<UUID> productIds) {
+        return inventoryRepository.findByProductIdIn(productIds).stream()
+                .collect(Collectors.toMap(Inventory::getProductId, Inventory::getStock));
+    }
 
     @Transactional
     public void deleteInventory(UUID productId) {
@@ -25,6 +35,17 @@ public class InventoryService {
         int updatedRows = inventoryRepository.updateOnShelfStatus(productId, onShelf);
         if (updatedRows == 0) {
             throw new ResourceNotFoundException("找不到商品ID为 " + productId + " 的库存记录，无法更新上架状态。");
+        }
+    }
+
+    @Transactional
+    public void updateStock(UUID productId, Integer newStock) {
+        if (newStock < 0) {
+            throw new IllegalArgumentException("库存数量不能为负数。");
+        }
+        int updatedRows = inventoryRepository.updateStockByProductId(productId, newStock);
+        if (updatedRows == 0) {
+            throw new ResourceNotFoundException("找不到商品ID为 " + productId + " 的库存记录，无法更新库存。");
         }
     }
 

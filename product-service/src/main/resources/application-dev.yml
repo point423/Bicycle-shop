@@ -37,6 +37,8 @@ spring:
         default: # 全局默认配置
           connectTimeout: 3000 # 3秒连接超时
           readTimeout: 5000    # 5秒读取超时
+    retry:
+      enabled: true
 
   resilience4j:
     circuitbreaker:

@@ -12,6 +12,11 @@ import org.springframework.http.HttpStatus;
 import java.util.List;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import com.zjsu.pjt.product.dto.ProductDetailDTO;
+
 
 
 @RestController
@@ -25,17 +30,27 @@ public class ProductController {
     private ProductService productService;
 
     // --- 对外展示接口 ---
-
-
     @GetMapping
-    @Operation(summary = "获取所有上架商品")
-    public List<Product> getOnShelfProducts() {
-        return productService.findOnShelfProducts();    }
+    @Operation(summary = "获取所有上架商品（分页!!!）")
+    public Page<ProductDetailDTO> getOnShelfProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return productService.findOnShelfProductsWithStock(pageable); // 传递 pageable
+    }
+
 
     @GetMapping("/category/{category}")
-    @Operation(summary = "按分类展示上架商品")
-    public List<Product> getProductsByCategory(@PathVariable String category) {
-        return productService.findOnShelfProductsByCategory(category);    }
+    @Operation(summary = "按分类展示上架商品 (分页 + 库存)")
+    public Page<ProductDetailDTO> getProductsByCategory(
+            @PathVariable String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return productService.findProductsByCategoryWithStock(category, pageable);
+    }
 
     @GetMapping("/{id}")
     @Operation(summary = "获取单个商品详情")

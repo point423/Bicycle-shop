@@ -7,14 +7,23 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import java.util.UUID;
 import java.util.List;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 
+
+    @Modifying
+    @Query("UPDATE Inventory i SET i.stock = :stock WHERE i.productId = :productId")
+    int updateStockByProductId(@Param("productId") UUID productId, @Param("stock") Integer stock);
+
     // 根据商品ID查找库存
     Optional<Inventory> findByProductId(UUID productId);
+
+    List<Inventory> findByProductIdIn(List<UUID> productIds);
+
 
     // 查询所有上架状态为true的库存记录
     List<Inventory> findByOnShelfTrue();

@@ -42,7 +42,7 @@ spring:
           sliding-window-size: 10 # 最近10次请求的滑动窗口
           minimum-number-of-calls: 5 # 至少5次请求后才开始计算失败率
           wait-duration-in-open-state: 10s # 熔断器开启后，等待10秒进入半开状态
-        catalog-service: # 与@FeignClient的name属性匹配
+        inventory-service: # 与@FeignClient的name属性匹配
           failure-rate-threshold: 50
           sliding-window-type: COUNT_BASED
           sliding-window-size: 10
@@ -52,7 +52,7 @@ spring:
       instances:
         user-service:
           timeout-duration: 4s
-        catalog-service:
+        inventory-service:
           timeout-duration: 4s
 
 

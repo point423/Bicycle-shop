@@ -45,7 +45,10 @@
 
     <dependencies>
 
-
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+        </dependency>
         <!-- OpenFeign (用于声明式的REST客户端) -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>

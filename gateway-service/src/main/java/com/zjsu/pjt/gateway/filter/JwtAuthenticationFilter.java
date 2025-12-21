@@ -107,7 +107,14 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         if (pathMatcher.match("/api/products", path) && method == HttpMethod.POST) {
             return true;
         }
-
+        // 规则4: 允许任何人查看商品列表，GET方法
+        if (pathMatcher.match("/api/products", path) && method == HttpMethod.GET) {
+            return true;
+        }
+// 规则5: 允许任何人获取图片资源，GET方法
+        if (pathMatcher.match("/images/**", path) && method == HttpMethod.GET) {
+            return true;
+        }
 
         // 如果以上规则都不匹配，则不在白名单内
         return false;

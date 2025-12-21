@@ -12,13 +12,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.util.HashMap;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
+import com.zjsu.pjt.product.dto.ProductDetailDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 @Service
 @Slf4j // 使用Lombok的Slf4j进行日志记录
 public class ProductService {
@@ -31,6 +34,20 @@ public class ProductService {
     // 注入 Feign 客户端
     @Autowired
     private InventoryClient inventoryClient;
+
+
+    public List<ProductDetailDTO> findAllProductsWithStock() {
+        List<Product> allProducts = productRepository.findAll();
+        if (allProducts.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<UUID> allProductIds = allProducts.stream().map(Product::getId).collect(Collectors.toList());
+        Map<UUID, Integer> stockMap = inventoryClient.getStocksByProductIds(allProductIds);
+
+        return allProducts.stream()
+                .map(product -> new ProductDetailDTO(product, stockMap.getOrDefault(product.getId(), 0)))
+                .collect(Collectors.toList());
+    }
 
     /**
      * 新增商品，并通知库存服务创建记录 (已使用Feign改造)
@@ -98,6 +115,57 @@ public class ProductService {
         }
     }
 
+
+    // 在 ProductService 中添加以下方法
+
+    /**
+     * 按分类查询上架商品（分页 + 库存填充）
+     * 逻辑：先获取所有上架ID，再在这些ID中按分类筛选并分页
+     */
+    public Page<ProductDetailDTO> findProductsByCategoryWithStock(String category, Pageable pageable) {
+
+        // 1. 获取所有上架商品的ID列表 (从 Inventory Service)
+        List<UUID> onShelfProductIds = getOnShelfProductIdsFromInventoryService();
+
+        if (onShelfProductIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        // 2. 从数据库查询：ID 在上架列表中，且分类匹配 (需要 Repository 支持)
+        // 你的 Repository 可能需要加一个方法：findByIdInAndCategory(List<UUID> ids, String category, Pageable pageable)
+        // 如果没有这个方法，请先去 Repository 加上
+        Page<Product> productPage = productRepository.findByIdInAndCategory(onShelfProductIds, category, pageable);
+
+        if (productPage.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        // 3. 提取当前页的商品ID
+        List<UUID> productIdsOnPage = productPage.getContent().stream()
+                .map(Product::getId)
+                .collect(Collectors.toList());
+
+        // 4. 批量查询库存
+        Map<UUID, Integer> stockMap;
+        try {
+            log.info("正在批量调用库存服务获取 {} 个商品的库存 (分类: {})...", productIdsOnPage.size(), category);
+            // 假设 inventoryClient.getStocksByProductIds 返回的是 Map<UUID, Integer>
+            // 注意：如果你的 Client 返回的是 ResponseEntity<Map...>，请在这里加上 .getBody()
+            // 根据你上面的代码 findAllProductsWithStock 来看，Client 直接返回了 Map，所以这里保持一致
+            stockMap = inventoryClient.getStocksByProductIds(productIdsOnPage);
+        } catch (Exception e) {
+            log.error("获取库存失败", e);
+            stockMap = new HashMap<>(); // 降级处理
+        }
+
+        // 5. 组装 DTO
+        Map<UUID, Integer> finalStockMap = stockMap;
+        List<ProductDetailDTO> dtos = productPage.getContent().stream()
+                .map(product -> new ProductDetailDTO(product, finalStockMap.getOrDefault(product.getId(), 0)))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtos, pageable, productPage.getTotalElements());
+    }
     /**
      * 更新商品的上架/下架状态 (已使用Feign改造)
      */
@@ -127,6 +195,44 @@ public class ProductService {
             return Collections.emptyList();
         }
         return productRepository.findAllById(onShelfProductIds);
+    }
+    @Transactional(readOnly = true)
+    public Page<ProductDetailDTO> findOnShelfProductsWithStock(Pageable pageable) {
+        // 1. 获取所有上架商品的ID列表
+        List<UUID> onShelfProductIds = getOnShelfProductIdsFromInventoryService();
+        if (onShelfProductIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        // 2. 根据ID列表进行分页查询商品
+        Page<Product> productPage = productRepository.findByIdIn(onShelfProductIds, pageable);
+        List<Product> productsOnPage = productPage.getContent();
+
+        if (productsOnPage.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        // 3. 提取当前页的商品ID，并批量获取库存
+        List<UUID> productIdsOnPage = productsOnPage.stream().map(Product::getId).collect(Collectors.toList());
+        Map<UUID, Integer> stockMap;
+        try {
+            log.info("正在批量调用库存服务获取 {} 个商品的库存...", productIdsOnPage.size());
+            stockMap = inventoryClient.getStocksByProductIds(productIdsOnPage);
+            log.info("批量获取库存成功。");
+        } catch (Exception e) {
+            log.error("错误：批量调用库存服务失败！原因: {}", e.getMessage());
+            // 降级策略：如果库存服务失败，返回空Map，前端将显示库存为0
+            stockMap = Collections.emptyMap();
+        }
+
+        // 4. 组装成DTO列表
+        final Map<UUID, Integer> finalStockMap = stockMap; // effectively final for lambda
+        List<ProductDetailDTO> dtos = productsOnPage.stream()
+                .map(product -> new ProductDetailDTO(product, finalStockMap.getOrDefault(product.getId(), 0)))
+                .collect(Collectors.toList());
+
+        // 5. 使用 PageImpl 创建并返回最终的分页结果
+        return new PageImpl<>(dtos, pageable, productPage.getTotalElements());
     }
 
     /**

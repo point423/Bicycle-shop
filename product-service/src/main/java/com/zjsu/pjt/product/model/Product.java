@@ -60,6 +60,9 @@ public class Product {
     @Min(value = 1000, message = "价格必须大于1000")
     private Integer price; // 价格
 
+    @Schema(description = "产品图片URL", example = "/images/giant-tcr.jpg")
+    private String imageUrl; // 新增产品图片URL字段
+
 
 
     @CreationTimestamp

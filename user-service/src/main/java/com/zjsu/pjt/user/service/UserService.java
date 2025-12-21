@@ -102,10 +102,6 @@ public class UserService {
     @Transactional
     public void deleteUser(UUID id) {
         User User = getUserById(id);
-   // TODO:    // 校验是否有关联选课记录
-//        if (enrollmentService.hasEnrollmentsForUser(id)) {
-//            throw new BusinessException("该学生存在选课记录，无法删除", HttpStatus.CONFLICT);
-//        }
         UserRepository.delete(User);
     }
 }

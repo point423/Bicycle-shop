@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
+import java.util.List; // 导入 List
+import com.zjsu.pjt.product.dto.InventoryUpdateRequest; // 确保你创建了这个DTO
+
 
 @Component
 @Slf4j
@@ -44,5 +47,25 @@ public class InventoryClientFallback implements InventoryClient {
                 "message", "Service unavailable, returning empty list."
         );
         return ResponseEntity.ok(fallbackResponse);
+    }
+
+    @Override
+    public Map<UUID, Integer> getStocksByProductIds(List<UUID> productIds) {
+        log.warn("InventoryClient#getStocksByProductIds fallback triggered for {} product IDs. 返回空的库存信息作为降级响应。", productIds.size());
+        // 对于批量查询库存，返回一个空的Map是合理的降级策略
+        return Collections.emptyMap();
+    }
+
+
+    @Override
+    public ResponseEntity<Map<String, Object>> decreaseStock(InventoryUpdateRequest request) {
+        log.warn("InventoryClient#decreaseStock fallback for productId: {}", request.getProductId());
+        throw new BusinessException(UNAVAILABLE_MSG, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    @Override
+    public ResponseEntity<Map<String, Object>> increaseStock(InventoryUpdateRequest request) {
+        log.warn("InventoryClient#increaseStock fallback for productId: {}", request.getProductId());
+        throw new BusinessException(UNAVAILABLE_MSG, HttpStatus.SERVICE_UNAVAILABLE);
     }
 }
