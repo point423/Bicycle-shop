@@ -1,0 +1,304 @@
+/* 全局彩虹动画 */
+@keyframes rainbow-bg-animation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes rainbow-text-animation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+body {
+    /* 1. 设置背景图路径 (请确保 images 文件夹和 style.css/index.html 在同一级或正确相对路径) */
+    background-image: url('images/bg.jpg');
+
+    /* 2. 背景图铺满且不随滚动条滚动 (视差效果) */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+
+    /* 3. 字体设置 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    min-height: 100vh;
+}
+
+
+/* ================= 顶部导航栏美化 (修改版) ================= */
+
+.rainbow-bg {
+    /* 核心：线性渐变 (180deg = 从上到下) */
+    /* 使用百分比“硬切”来实现条条分明的效果，不进行模糊过渡 */
+    background: linear-gradient(
+        180deg,
+        #ff2400 0%,   #ff2400 14.28%,  /* 红 */
+        #ff9a00 14.28%, #ff9a00 28.56%, /* 橙 */
+        #ffeb3b 28.56%, #ffeb3b 42.84%, /* 黄 */
+        #4caf50 42.84%, #4caf50 57.12%, /* 绿 */
+        #2196f3 57.12%, #2196f3 71.4%,  /* 蓝 */
+        #3f51b5 71.4%,  #3f51b5 85.68%, /* 靛 */
+        #9c27b0 85.68%, #9c27b0 100%    /* 紫 */
+    );
+
+    /* 底部阴影，增加立体感 */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: none;
+}
+/* 2. 强制统一所有导航栏文字为纯白 */
+.navbar .navbar-brand,
+.navbar .navbar-text,
+.navbar .nav-link,
+.navbar .slogan,
+.navbar span {
+    color: #ffffff !important; /* 强制纯白 */
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6); /* 加重阴影，防止背景图也是白色导致看不清 */
+}
+
+/* 3. 这里的 slogan 样式微调，确保居中且不换行 */
+.slogan {
+    font-size: 1.2rem;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    /* 颜色已经在上面统一设置了 */
+}
+
+/* 4. 按钮稍微调整，让边框更明显一点 */
+.navbar .btn-outline-light {
+    border-width: 2px;
+    font-weight: bold;
+}
+.navbar .btn-outline-light:hover {
+    background-color: #fff;
+    color: #000;
+}
+
+.navbar {
+    padding-top: 1rem; /* 增加导航栏上下内边距 */
+    padding-bottom: 1rem;
+}
+
+/* 媒体查询，在超小屏幕上隐藏标语，避免与品牌文字重叠 */
+@media (max-width: 576px) {
+    .slogan {
+        display: none;
+    }
+}
+
+/* 彩虹文字 */
+.rainbow-text {
+    background: linear-gradient(124deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);
+    background-size: 1800% 1800%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbow-text-animation 18s ease infinite;
+    font-weight: bold;
+}
+
+/* 优化商品卡片，让它在背景上更好看 */
+.card {
+    border: none;
+    border-radius: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.95); /* 卡片不透明 */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2); /* 悬浮时阴影加深 */
+}
+.card-img-top {
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+.card-price { font-weight: bold; }
+
+/* 登录/注册弹窗美化 */
+.modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+.modal-header {
+    border-bottom: none;
+}
+.modal-footer {
+    border-top: none;
+}
+.form-control {
+    border-radius: 8px;
+    padding: 12px;
+}
+.form-control:focus {
+    box-shadow: 0 0 0 2px rgba(221, 0, 243, 0.25);
+    border-color: #dd00f3;
+}
+/* ================= 按钮与图标美化 (新版) ================= */
+
+/* 1. 蓝色渐变按钮 (用于“加入购物车”和“管理商品”) */
+/* 覆盖 Bootstrap 默认的 .btn-primary */
+.btn-primary {
+    /* 核心：从深蓝到亮蓝的线性渐变 */
+    background-image: linear-gradient(to right, #0052D4 0%, #4364F7 51%, #0052D4 100%);
+    background-size: 200% auto; /* 放大背景以实现 hover 时的流动效果 */
+
+    border: none; /* 去掉边框 */
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    color: white;
+    transition: 0.5s; /* 平滑过渡动画 */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* 鼠标悬停效果：背景流动 + 上浮 */
+.btn-primary:hover {
+    background-position: right center; /* 移动背景位置 */
+    background-color: #fff; /* 兼容 fallback */
+    color: #fff;
+    transform: translateY(-3px); /* 微微上浮 */
+    box-shadow: 0 10px 20px rgba(0, 82, 212, 0.4); /* 蓝色光晕阴影 */
+}
+
+/* 禁用状态样式优化 */
+.btn-primary:disabled {
+    background: #ccc;
+    background-image: none;
+    transform: none;
+    box-shadow: none;
+}
+
+
+/* 2. 橙色渐变购物车图标 (FAB) - 修复版 */
+.cart-fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+
+    /* 核心：橙色渐变 */
+    background: linear-gradient(45deg, #FF512F, #F09819);
+
+    border-radius: 50%;
+
+    /* 关键：使用 Flex 布局居中图标 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: white; /* 确保图标是白色的 */
+    font-size: 28px; /* 设置图标大小 */
+    cursor: pointer;
+
+    /* 橙色阴影 */
+    box-shadow: 0 4px 15px rgba(240, 152, 25, 0.4);
+
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    z-index: 1050;
+    text-decoration: none; /* 防止变成链接时有下划线 */
+}
+
+/* 显式定义图标样式，防止被覆盖 */
+.cart-fab i {
+    display: inline-block;
+    line-height: 1;
+    color: #ffffff !important; /* 强制白色 */
+}
+
+/* 悬停效果 */
+.cart-fab:hover {
+    transform: scale(1.1) rotate(10deg);
+    box-shadow: 0 8px 25px rgba(240, 152, 25, 0.6);
+    color: white; /* 悬停时保持白色 */
+}
+
+/* 购物车角标 */
+.cart-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(25%, -25%);
+    border: 2px solid white;
+    font-size: 0.75rem; /* 字体稍微改小一点更精致 */
+}
+
+/* 购物车面板 */
+.cart-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.cart-item-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-right: 15px;
+}
+.cart-item-details {
+    flex-grow: 1;
+}
+.quantity-controls {
+    display: flex;
+    align-items: center;
+}
+
+/* ================= 分类按钮美化 ================= */
+
+/* 浅黄色渐变按钮 */
+.btn-yellow-gradient {
+    /* 核心：从浅黄到暖橙的渐变 */
+    background-image: linear-gradient(to right, #f6d365 0%, #fda085 51%, #f6d365 100%);
+    background-size: 200% auto;
+
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: 0.5s;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2); /* 让白字在黄底上更清晰 */
+}
+
+.btn-yellow-gradient:hover {
+    background-position: right center;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(253, 160, 133, 0.4);
+    color: white;
+}
+
+/* 下拉菜单微调 */
+.dropdown-menu {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+}
+
+.dropdown-item {
+    font-weight: 500;
+    padding: 10px 20px;
+    transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f2f5;
+    color: #fda085; /* 悬停时变橙色 */
+    transform: translateX(5px);
+}

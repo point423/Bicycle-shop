@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单车商城 - 项目演示</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 1. 顶部导航栏 -->
+
+
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top rainbow-bg">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">🚲 </a>
+
+        <span class="navbar-text mx-auto slogan">
+            世界因骑行而美好~
+        </span>
+        <div class="d-flex">
+            <span id="welcome-message" class="navbar-text me-3 d-none"></span>
+            <button id="auth-button" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#loginModal">
+                登录 / 注册
+            </button>
+            <button id="logout-button" class="btn btn-outline-warning d-none">退出登录</button>
+        </div>
+    </div>
+</nav>
+
+<!-- 2. 主体内容区 -->
+<!-- 2. 主体内容区 -->
+<main class="container mt-4">
+    <!-- 标题栏容器：使用 row 或者 flex-wrap 确保在小屏幕下自动换行，防止挤压 -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom border-light">
+
+        <!-- 左侧：标题 -->
+        <h2 class="text-white fw-bold m-0" style="text-shadow: 0 2px 5px rgba(0,0,0,0.5); white-space: nowrap;">
+            <i class="bi bi-fire text-warning"></i> 热卖商品
+        </h2>
+
+        <!-- 右侧：按钮组 -->
+        <div class="d-flex align-items-center gap-3 mt-2 mt-md-0">
+            <!-- 分类下拉 -->
+            <div class="dropdown">
+                <button class="btn btn-yellow-gradient dropdown-toggle text-white fw-bold shadow-sm" type="button" id="categoryDropdown" data-bs-toggle="dropdown">
+                    <i class="bi bi-grid-fill"></i> 按分类查找
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                    <li><a class="dropdown-item category-filter py-2" href="#" data-category="all"><i class="bi bi-collection"></i> 全部商品</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item category-filter py-2" href="#" data-category="公路车">🚴‍♂️ 公路车</a></li>
+                    <li><a class="dropdown-item category-filter py-2" href="#" data-category="山地车">🚵‍♀️ 山地车</a></li>
+                    <li><a class="dropdown-item category-filter py-2" href="#" data-category="城市车">🏙️ 城市车</a></li>
+                    <li><a class="dropdown-item category-filter py-2" href="#" data-category="折叠车">🎒 折叠车</a></li>
+                </ul>
+            </div>
+
+            <!-- 管理按钮 (仅管理员可见) -->
+            <button id="manage-product-btn" class="btn btn-primary d-none shadow-sm">
+                <i class="bi bi-gear-fill"></i> 管理
+            </button>
+        </div>
+    </div>
+
+    <!-- 商品列表容器 -->
+    <div id="product-list" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4"></div>
+
+    <!-- 加载动画 -->
+    <div id="loading-indicator" class="text-center my-5 d-none">
+        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">加载中...</span>
+        </div>
+    </div>
+</main>
+
+<!-- 3. 登录模态弹窗 -->
+<div class="modal fade" id="loginModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title rainbow-text">登录</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label for="login-username" class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="login-username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="login-password" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">立即登录</button>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <p>还没有账号？<a href="#" id="show-register-link">立即注册</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. 注册模态弹窗 -->
+<div class="modal fade" id="registerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title rainbow-text">注册新用户</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="register-form">
+                    <div class="mb-3">
+                        <label for="register-username" class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="register-username" required minlength="3" maxlength="50">
+                        <div class="form-text">用户名长度必须在3到50个字符之间。</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="register-password" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="register-password" required minlength="6">
+                        <div class="form-text">密码长度至少为6位。</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="register-phone" class="form-label">手机号</label>
+                        <input type="tel" class="form-control" id="register-phone" required>
+                        <div class="form-text">请输入有效的11位手机号码。</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="register-age" class="form-label">年龄</label>
+                        <input type="number" class="form-control" id="register-age" required min="0">
+                        <div class="form-text">年龄不能为负数。</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="register-is-admin">
+                        <label class="form-check-label" for="register-is-admin">注册为管理员</label>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">立即注册</button>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <p>已有账号？<a href="#" id="show-login-link">返回登录</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5. 购物车图标 -->
+<div class="cart-fab" data-bs-toggle="offcanvas" data-bs-target="#cart-offcanvas">
+    <i class="bi bi-cart3"></i>
+    <span class="cart-badge badge rounded-pill bg-danger d-none">0</span>
+</div>
+
+<!-- 6. 购物车面板 (Offcanvas) -->
+<div class="offcanvas offcanvas-bottom" tabindex="-1" id="cart-offcanvas" style="height: 60vh;">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title rainbow-text">我的购物车</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body" id="cart-body">
+        <div id="cart-items-container"></div>
+        <div id="cart-empty-message" class="text-center text-muted fs-4 mt-5">
+            <i class="bi bi-cart-x" style="font-size: 3rem;"></i>
+            <p>购物车还是空的</p>
+        </div>
+    </div>
+    <div class="offcanvas-footer p-3 bg-light border-top">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4>总计: <span id="cart-total-price" class="text-danger fw-bold">¥0.00</span></h4>
+        </div>
+    </div>
+</div>
+
+<!-- 7. 图片放大模态框 -->
+<div class="modal fade" id="image-zoom-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-body p-0 text-center">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" style="z-index: 1060;"></button>
+                <img id="zoomed-image" src="" class="img-fluid rounded" alt="商品大图">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

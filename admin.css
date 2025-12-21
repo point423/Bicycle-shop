@@ -1,0 +1,146 @@
+/* admin.css */
+body {
+    background-color: #f8f9fa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* 侧边栏样式 */
+#sidebar {
+    background-color: #212529; /* 深色背景 */
+    min-height: 100vh;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+#sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.75);
+    padding: 15px 20px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+}
+
+/* ================= 管理后台美化 ================= */
+
+/* 定义彩虹动画关键帧 */
+@keyframes rainbow-sidebar-anim {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+body {
+    background-color: #f3f4f6; /* 右侧内容区背景稍微灰一点，突出层次 */
+}
+
+/* 侧边栏整体样式 */
+#sidebar {
+    /* 使用线性渐变实现彩虹背景 */
+    background: linear-gradient(180deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);
+    background-size: 400% 400%;
+
+    /* 激活动画：让背景缓慢流动，看起来很高级 */
+    animation: rainbow-sidebar-anim 20s ease infinite;
+
+    min-height: 100vh;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+    color: white;
+}
+
+/* 侧边栏标题区 */
+#sidebar h3 {
+    background-color: rgba(0, 0, 0, 0.1); /* 标题背景深一点 */
+    margin: 0;
+    padding: 20px 0;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+/* 导航链接通用样式 */
+#sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.9);
+    padding: 15px 25px;
+    margin: 8px 15px; /* 上下留空，左右缩进，形成胶囊状 */
+    border-radius: 50px; /* 圆角胶囊 */
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+/* 导航链接图标 */
+#sidebar .nav-link i {
+    margin-right: 12px;
+    font-size: 1.2rem;
+}
+
+/* 鼠标悬停效果 */
+#sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+    transform: translateX(5px); /* 微微右移 */
+}
+
+/* === 选中状态 (Active) - 变成白色胶囊，文字变回彩色 === */
+#sidebar .nav-link.active {
+    background-color: #ffffff; /* 纯白背景 */
+    color: #333; /* 文字深色 */
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* 阴影 */
+}
+
+/* 针对不同板块的激活状态文字颜色 (可选：让文字颜色呼应板块) */
+#sidebar .nav-link#nav-products.active { color: #198754; } /* 绿色 */
+#sidebar .nav-link#nav-users.active { color: #0dcaf0; }    /* 蓝色 */
+#sidebar .nav-link#nav-orders.active { color: #ffc107; }   /* 黄色 */
+
+/* 退出登录区域 */
+.mt-5.px-3 {
+    background: rgba(0,0,0,0.1);
+    padding: 20px;
+    border-radius: 15px;
+    margin: 20px;
+    backdrop-filter: blur(5px);
+}
+
+/* 标题文字颜色与导航对应 */
+.text-info { color: #0dcaf0 !important; }
+.text-warning { color: #ffc107 !important; }
+
+/* 商品卡片后台样式 */
+.admin-product-card {
+    transition: transform 0.2s;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.admin-product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+.admin-product-img {
+    height: 180px;
+    object-fit: cover;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    background-color: #eee;
+}
+.status-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* 表格样式 */
+.table th {
+    font-weight: 600;
+    border-top: none;
+}
+.table td {
+    vertical-align: middle;
+}
