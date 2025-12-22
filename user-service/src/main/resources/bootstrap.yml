@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: user-service # <-- 这里替换为当前服务的名称
+  cloud:
+    nacos:
+      config:
+        server-addr: nacos:8848
+        file-extension: yaml       # 指定配置文件格式为 yaml
+        refresh-enabled: true
+        group: DEFAULT_GROUP
+        username: nacos # 默认用户名
+        password: nacos # 默认密码
+
+
+
+  profiles:
+    active: dev # 指定默认启动的环境为 dev

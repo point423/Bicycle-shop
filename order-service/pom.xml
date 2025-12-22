@@ -24,7 +24,7 @@
     </properties>
 
 
-    <!-- 【关键】为当前模块提供“版本目录” -->
+    <!-- 统一管理Spring Cloud和Alibaba Cloud的版本 -->
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -46,6 +46,18 @@
 
     <dependencies>
 
+
+        <!-- Nacos Config Starter -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+
+        <!-- Spring Cloud Bootstrap for loading remote configuration -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        </dependency>
         <!-- OpenFeign (用于声明式的REST客户端) -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
