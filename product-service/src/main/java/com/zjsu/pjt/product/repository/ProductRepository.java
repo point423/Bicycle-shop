@@ -4,6 +4,7 @@ import com.zjsu.pjt.product.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import java.util.Optional; // 导入 Optional
 
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +19,7 @@ import org.springframework.data.domain.Pageable; // 导入 Pageable
 public interface ProductRepository extends JpaRepository<Product, UUID> {
     // 根据ID列表和分类进行查询
     List<Product> findByIdInAndCategory(List<UUID> ids, String category);
-
+    Optional<Product> findByModel(String model);
     /**
      * 根据提供的ID列表，进行分页查询
      * @param ids 商品ID的列表

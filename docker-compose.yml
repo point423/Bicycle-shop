@@ -1,314 +1,200 @@
-networks:
-  bicycle-network:
-    driver: bridge
+
 
 services:
-  # 自行车产品数据库
-  product-db:
-    image: mysql:8.4
-    container_name: product-db
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: product_db
-      MYSQL_USER: product_user
-      MYSQL_PASSWORD: product_pass
-    ports:
-      - "3307:3306"
-    volumes:
-      - product-data:/var/lib/mysql
-    networks:
-      - bicycle-network
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+  # ================= 基础设施 =================
 
-  # 用户数据库
-  user-db:
+  # 1. 统一 MySQL 数据库
+  mysql:
     image: mysql:8.4
-    container_name: user-db
+    container_name: mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: user_db
-      MYSQL_USER: user_user
-      MYSQL_PASSWORD: user_pass
+      MYSQL_ROOT_PASSWORD: root
     ports:
       - "3306:3306"
     volumes:
-      - user-data:/var/lib/mysql
-    networks:
-      - bicycle-network
+      - ./mysql-data:/var/lib/mysql
+      # ⚠️ 确保 init-db 目录下有 00-init.sql (包含建库和建表语句)
+      - ./init-db:/docker-entrypoint-initdb.d
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  # 订单数据库
-  order-db:
-    image: mysql:8.4
-    container_name: order-db
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: order_db
-      MYSQL_USER: order_user
-      MYSQL_PASSWORD: order_pass
-    ports:
-      - "3308:3306"
-    volumes:
-      - order-data:/var/lib/mysql
+      # MySQL 8.4 已移除 default-authentication-plugin 参数，这里删除了
     networks:
-      - bicycle-network
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
+      - micro-net
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
 
-    # 库存数据库
-  inventory-db:
-    image: mysql:8.4
-    container_name: inventory-db
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: inventory_db
-      MYSQL_USER: inventory_user
-      MYSQL_PASSWORD: inventory_pass
-    ports:
-      - "3309:3306" # 为新数据库分配一个未被占用的主机端口
-    volumes:
-      - inventory-data:/var/lib/mysql
-    networks:
-      - bicycle-network
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
+  # 2. Nacos (3.1.0)
   nacos:
     image: nacos/nacos-server:v3.1.0
-    container_name: nacos-standalone
+    container_name: nacos
     environment:
       - MODE=standalone
+      # 开启鉴权相关配置
+      - NACOS_AUTH_ENABLE=true
+      - NACOS_AUTH_TOKEN=VGhpc0lzTXlTdXBlckxvbmdBbmRBYnNvbHV0ZWx5U2VjdXJlU2VjcmV0S2V5Rm9yTmFjb3NBdXRoMTIzNDU=
       - NACOS_AUTH_IDENTITY_KEY=serverIdentity
       - NACOS_AUTH_IDENTITY_VALUE=serverIdentity
-      - NACOS_AUTH_ENABLE=true
       - JAVA_OPT=-Xms256m -Xmx256m
-      - NACOS_AUTH_TOKEN=VGhpc0lzTXlTdXBlckxvbmdBbmRBYnNvbHV0ZWx5U2VjdXJlU2VjcmV0S2V5Rm9yTmFjb3NBdXRoMTIzNDU=
     ports:
-      - "9848:9848"
-      - "8848:8848" # API Port
-      - "8849:8080" # <-- 修正：为UI界面额外开一个门
+      - "8848:8848" # API 端口
+      - "9848:9848" # gRPC 端口
+      - "8849:8080" # UI 控制台端口 (宿主机访问 http://localhost:8849/nacos)
     networks:
-      - bicycle-network
+      - micro-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/ || exit 1" ]
       interval: 15s
       timeout: 10s
       retries: 10
       start_period: 120s
+    restart: always
 
-  # 可爱的自行车产品服务,什么时候可以骑着车环游世界呢，我的人生到底要到达什么样的彼岸呢？多年以后，我会想起这里的注释的。哈哈哈哈哈这是一个彩蛋，也许老师永远不会看见。
-  product-service:
-    build:
-      context: ./product-service
-      dockerfile: Dockerfile
-    container_name: product-service
+  # ================= 微服务 =================
+
+  # 3. 用户服务
+  user-service:
+    build: ./user-service
+    container_name: user-service
     environment:
-      SPRING_PROFILES_ACTIVE: dev
-      DB_URL: jdbc:mysql://product-db:3306/product_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      DB_USERNAME: product_user
-      DB_PASSWORD: product_pass
-    ports:
-      - "8082:8082"
-    depends_on:
-      product-db:
-        condition: service_healthy
-      inventory-service-1:
-        condition: service_started
-      nacos:
-        condition: service_healthy
-    networks:
-      - bicycle-network
-    restart: unless-stopped
-
-    # 库存服务
-  inventory-service-1:
-    build:
-      context: ./inventory-service
-      dockerfile: Dockerfile
-    container_name: inventory-service-1
-    environment:
-      SPRING_PROFILES_ACTIVE: dev
-      DB_URL: jdbc:mysql://inventory-db:3306/inventory_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      DB_USERNAME: inventory_user
-      DB_PASSWORD: inventory_pass
-      SERVER_PORT: 8084
-    ports:
-      - "8084:8084"
-    depends_on:
-      inventory-db:
-        condition: service_healthy
-      nacos:
-        condition: service_healthy
-    networks:
-      - bicycle-network
-    restart: unless-stopped
-
-
-
-  # 库存服务
-  inventory-service-2:
-    build:
-      context: ./inventory-service
-      dockerfile: Dockerfile
-    container_name: inventory-service-2
-    environment:
-      SPRING_PROFILES_ACTIVE: dev
-      DB_URL: jdbc:mysql://inventory-db:3306/inventory_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      DB_USERNAME: inventory_user
-      DB_PASSWORD: inventory_pass
-      SERVER_PORT: 8030
-    ports:
-      - "8085:8030"
-    depends_on:
-      inventory-db:
-        condition: service_healthy
-      nacos:
-        condition: service_healthy
-    networks:
-      - bicycle-network
-    restart: unless-stopped
-
-  # 用户服务
-  user-service-1:
-    build:
-      context: ./user-service
-      dockerfile: Dockerfile
-    container_name: user-service-1
-    environment:
-      JWT_SECRET: "ThisIsMySuperLongAndExtremelySecureSecretKeyForHS512AlgorithmAtLeast64Chars"
-      JWT_EXPIRATION: 86400000
-      SPRING_PROFILES_ACTIVE: dev
-      DB_URL: jdbc:mysql://user-db:3306/user_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      DB_USERNAME: user_user
-      DB_PASSWORD: user_pass
-      SERVER_PORT: 8081
+      - SERVER_PORT=8081
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_USERNAME=nacos
+      - SPRING_CLOUD_NACOS_PASSWORD=nacos  # 对应 SQL 中初始化的密码
+      - DB_URL=jdbc:mysql://mysql:3306/user_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+      - JWT_SECRET=ThisIsMySuperLongAndExtremelySecureSecretKeyForHS512AlgorithmAtLeast64Chars
+      - JWT_EXPIRATION=86400000
     ports:
       - "8081:8081"
     depends_on:
-      user-db:
-        condition: service_healthy
       nacos:
         condition: service_healthy
+      mysql:
+        condition: service_healthy
     networks:
-      - bicycle-network
-    restart: unless-stopped
+      - micro-net
+    restart: on-failure
 
-  # 用户服务
-  user-service-2:
-    build:
-      context: ./user-service
-      dockerfile: Dockerfile
-    container_name: user-service-2
+  # 4. 商品服务
+  product-service:
+    build: ./product-service
+    container_name: product-service
     environment:
-      JWT_SECRET: "ThisIsMySuperLongAndExtremelySecureSecretKeyForHS512AlgorithmAtLeast64Chars"
-      JWT_EXPIRATION: 86400000
-      SPRING_PROFILES_ACTIVE: dev
-      DB_URL: jdbc:mysql://user-db:3306/user_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      DB_USERNAME: user_user
-      DB_PASSWORD: user_pass
-      SERVER_PORT: 8020
+      - SERVER_PORT=8082
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_USERNAME=nacos
+      - SPRING_CLOUD_NACOS_PASSWORD=nacos
+      - DB_URL=jdbc:mysql://mysql:3306/product_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
     ports:
-      - "8086:8020"
+      - "8082:8082"
     depends_on:
-      user-db:
-        condition: service_healthy
       nacos:
         condition: service_healthy
+      mysql:
+        condition: service_healthy
+      inventory-service:
+        condition: service_started
     networks:
-      - bicycle-network
-    restart: unless-stopped
+      - micro-net
+    restart: on-failure
 
+  # 5. 库存服务
+  inventory-service:
+    build: ./inventory-service
+    container_name: inventory-service
+    environment:
+      - SERVER_PORT=8083
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_USERNAME=nacos
+      - SPRING_CLOUD_NACOS_PASSWORD=nacos
+      - DB_URL=jdbc:mysql://mysql:3306/inventory_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
 
-  # API 网关
+    ports:
+      - "8083:8083"
+    depends_on:
+      nacos:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    networks:
+      - micro-net
+    restart: on-failure
+
+  # 6. 订单服务
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    environment:
+      - SERVER_PORT=8084
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_USERNAME=nacos
+      - SPRING_CLOUD_NACOS_PASSWORD=nacos
+      - DB_URL=jdbc:mysql://mysql:3306/order_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+    ports:
+      - "8084:8084"
+    depends_on:
+      nacos:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+    networks:
+      - micro-net
+    restart: on-failure
+
+  # 7. API 网关
   gateway-service:
-    build:
-      context: ./gateway-service
-      dockerfile: Dockerfile
+    build: ./gateway-service
     container_name: gateway-service
-    ports:
-      - "8090:8090" # 暴露网关端口
     environment:
-      # 网关也需要知道Nacos在哪里
-      JWT_SECRET: "ThisIsMySuperLongAndExtremelySecureSecretKeyForHS512AlgorithmAtLeast64Chars"
-      JWT_EXPIRATION: 86400000
-      SPRING_PROFILES_ACTIVE: dev
-      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_USERNAME=nacos
+      - SPRING_CLOUD_NACOS_PASSWORD=nacos
+      - JWT_SECRET=ThisIsMySuperLongAndExtremelySecureSecretKeyForHS512AlgorithmAtLeast64Chars
+    ports:
+      - "8090:8080" # 映射宿主机 8090
     depends_on:
       nacos:
         condition: service_healthy
-      user-service-1:
+      user-service:
         condition: service_started
       product-service:
         condition: service_started
       order-service:
         condition: service_started
-      inventory-service-1:
+      inventory-service:
         condition: service_started
     networks:
-      - bicycle-network
-    restart: unless-stopped
+      - micro-net
+    restart: on-failure
 
-
-  # 订单服务
-  order-service:
-    build:
-      context: ./order-service
-      dockerfile: Dockerfile
-    container_name: order-service
-    environment:
-      SPRING_PROFILES_ACTIVE: dev
-      DB_URL: jdbc:mysql://order-db:3306/order_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      DB_USERNAME: order_user
-      DB_PASSWORD: order_pass
-    ports:
-      - "8083:8083"
-    depends_on:
-      order-db:
-        condition: service_healthy
-      user-service-1:
-        condition: service_started
-      product-service:
-        condition: service_started
-      inventory-service-1:
-        condition: service_started
-      nacos:
-        condition: service_healthy
-    networks:
-      - bicycle-network
-    restart: unless-stopped
-
-volumes:
-  product-data:
-  order-data:
-  user-data:
-  inventory-data:
+networks:
+  micro-net:
+    driver: bridge

@@ -33,8 +33,10 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedAndPublishProducts() {
-        if (productRepository.count() == 0) {
-            log.info("数据库为空，开始初始化并上架15条商品数据...");
+
+
+                productRepository.deleteAll();
+                log.info("旧商品数据清理完毕。");
 
             List<Product> productsToSave = new ArrayList<>();
             productsToSave.add(createProduct("Giant", "公路车", "TCR Advanced 2", "Shimano 105", "M", "星空黑", 16800, "/images/giant-tcr.jpg"));
@@ -72,10 +74,8 @@ public class DataSeeder implements CommandLineRunner {
                 }
             }
             log.info("商品库存创建及上架流程完成。");
-        } else {
-            log.info("数据库中已存在商品数据，无需初始化。");
         }
-    }
+
 
     private Product createProduct(String brand, String category, String model, String gearSystem, String frameSize, String color, int price, String imageUrl) {
         Product p = new Product();
