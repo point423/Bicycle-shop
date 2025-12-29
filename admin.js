@@ -232,12 +232,16 @@ async function saveProduct() {
             if (createdProduct && createdProduct.id) {
                 // 设置库存 (调用 create 接口)
                 // 你的 InventoryController 有 create 接口: POST /api/inventorys/create
-                if (!isNaN(newStock)) {
-                    console.log("2. 初始化库存...");
-                    await adminApiCall('/api/inventorys/create', 'POST', {
-                        productId: createdProduct.id,
-                        stock: newStock
-                    });
+                if (!isNaN(newStock) && newStock > 0) {
+                                    console.log(`更新初始库存: ID=${createdProduct.id}, 数量=${newStock}`);
+
+                                    const inventoryRequest = {
+                                        productId: createdProduct.id,
+                                        quantity: newStock
+                                    };
+
+                                    // 使用 PUT 更新接口
+                                    await adminApiCall('/api/inventorys/admin/stock', 'PUT', inventoryRequest);
                 }
 
                 // 如果勾选了上架，执行上架操作
