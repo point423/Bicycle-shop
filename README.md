@@ -72,18 +72,14 @@ frontend/
 - Docker & Docker Compose
 
 ### 2. 启动后端服务
+
 1.**启动基础设施:**
-    在每个服务目录下，执行以下命令编译打包为jar文件。
-    ```bash
-    mvn clean package -DskipTests
-    ```
-2.**启动基础设施:**
     在项目根目录下，执行以下命令以构建并启动 Nacos 服务。
     ```bash
     docker-compose up -d --build
     ```
 
-3.  **验证服务:**
+2.  **验证服务:**
     浏览器访问 `http://localhost:8849`，使用账号 `nacos` 密码 `nacos` 登录。在 "服务列表" 中应能看到所有微服务均已成功注册。
 
 ### 3. 启动前端项目
