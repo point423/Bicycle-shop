@@ -75,9 +75,9 @@ frontend/
 
 1.**启动基础设施:**
     在项目根目录下，执行以下命令以构建并启动 Nacos 服务。
-    ```bash
+  
     docker-compose up -d --build
-    ```
+
 
 2.  **验证服务:**
     浏览器访问 `http://localhost:8849`，使用账号 `nacos` 密码 `nacos` 登录。在 "服务列表" 中应能看到所有微服务均已成功注册。
